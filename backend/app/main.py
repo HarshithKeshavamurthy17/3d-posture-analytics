@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 import uuid
 from datetime import datetime
+import gc
 
 from app.services.video_processor import VideoProcessor
 from app.services.pose_estimator import PoseEstimator
@@ -100,16 +101,15 @@ async def upload_video(file: UploadFile = File(...)):
         
         print(f"[{job_id}] Video uploaded: {file.filename}")
         
-        # Step 1: Extract frames from video
-        print(f"[{job_id}] Extracting frames...")
-        frames = video_processor.extract_frames(str(video_path))
-        print(f"[{job_id}] Extracted {len(frames)} frames")
+        # Step 1 & 2: Stream frames and run pose estimation
+        print(f"[{job_id}] Processing video stream...")
+        # Use generator to save memory (resizes to 480p max width)
+        frame_generator = video_processor.stream_frames(str(video_path), max_width=480)
+        pose_data = pose_estimator.process_frames(frame_generator)
+        print(f"[{job_id}] Processed {len(pose_data)} frames")
         
-        # Step 2: Run pose estimation on frames
-        print(f"[{job_id}] Running pose estimation...")
-        # This now returns the normalized 3D frames structure directly
-        frames_data = pose_estimator.process_frames(frames)
-        print(f"[{job_id}] Pose estimation complete")
+        # Force garbage collection
+        gc.collect()
         
         # Step 3: Reconstruct 3D poses - SKIPPED (PoseEstimator now does 3D)
         # print(f"[{job_id}] Reconstructing 3D poses...")
@@ -119,7 +119,7 @@ async def upload_video(file: UploadFile = File(...)):
         # Step 4: Compute analytics
         print(f"[{job_id}] Computing analytics...")
         try:
-            analytics = analytics_engine.compute_analytics(frames_data)
+            analytics = analytics_engine.compute_analytics(pose_data)
             print(f"[{job_id}] Analytics complete")
         except Exception as analytics_error:
             print(f"[{job_id}] Analytics computation failed: {analytics_error}")

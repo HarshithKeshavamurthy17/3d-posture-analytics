@@ -73,6 +73,49 @@ class VideoProcessor:
         
         except Exception as e:
             raise RuntimeError(f"Frame extraction failed: {str(e)}")
+
+    def stream_frames(self, video_path: str, max_width: int = 480):
+        """
+        Generator that yields frames from video at specified FPS, resized for memory efficiency.
+        
+        Args:
+            video_path: Path to video file
+            max_width: Maximum width for resized frames (default: 480)
+        
+        Yields:
+            Resized frames as numpy arrays
+        """
+        try:
+            cap = cv2.VideoCapture(video_path)
+            if not cap.isOpened():
+                raise ValueError(f"Cannot open video file: {video_path}")
+            
+            original_fps = cap.get(cv2.CAP_PROP_FPS)
+            frame_interval = max(1, int(original_fps / self.target_fps))
+            
+            frame_count = 0
+            
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                
+                if frame_count % frame_interval == 0:
+                    # Resize frame to reduce memory usage
+                    if max_width:
+                        height, width = frame.shape[:2]
+                        if width > max_width:
+                            new_height = int(height * (max_width / width))
+                            frame = cv2.resize(frame, (max_width, new_height))
+                    
+                    yield frame
+                
+                frame_count += 1
+            
+            cap.release()
+            
+        except Exception as e:
+            raise RuntimeError(f"Frame streaming failed: {str(e)}")
     
     def validate_video(self, video_path: str) -> dict:
         """
