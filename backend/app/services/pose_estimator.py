@@ -5,128 +5,71 @@ from typing import List, Dict, Any
 
 
 class PoseEstimator:
-    """
-    Handles pose estimation using MediaPipe Pose
-    Extracts 33 body landmarks from each frame
-    """
-    
-    def __init__(self, min_detection_confidence: float = 0.5, min_tracking_confidence: float = 0.5):
-        """
-        Initialize MediaPipe Pose estimator
-        
-        Args:
-            min_detection_confidence: Minimum confidence for detection (0.0 - 1.0)
-            min_tracking_confidence: Minimum confidence for tracking (0.0 - 1.0)
-        """
+    def __init__(self, model_complexity=2):
         self.mp_pose = mp.solutions.pose
-        self.mp_drawing = mp.solutions.drawing_utils
-        
         self.pose = self.mp_pose.Pose(
             static_image_mode=False,
-            model_complexity=1,  # 0, 1, or 2 (2 is most accurate but slowest)
-            min_detection_confidence=min_detection_confidence,
-            min_tracking_confidence=min_tracking_confidence
+            model_complexity=model_complexity,
+            enable_segmentation=False,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
         )
+
+    def normalize_frame(self, lm):
+        """
+        Normalize landmarks: center at hips and scale by torso size
+        """
+        pts = [(p.x, p.y, p.z) for p in lm]
+
+        # center at mid-hip so body stays around origin
+        L_HIP, R_HIP = 23, 24
+        cx = (pts[L_HIP][0] + pts[R_HIP][0]) / 2
+        cy = (pts[L_HIP][1] + pts[R_HIP][1]) / 2
+        cz = (pts[L_HIP][2] + pts[R_HIP][2]) / 2
+        pts = [(x-cx, y-cy, z-cz) for (x,y,z) in pts]
+
+        # scale by torso to make visible
+        L_SHO, R_SHO = 11, 12
+        torso = ((pts[L_SHO][0]-pts[R_SHO][0])**2 + (pts[L_SHO][1]-pts[R_SHO][1])**2 + (pts[L_SHO][2]-pts[R_SHO][2])**2) ** 0.5
+        s = 1.0 / (torso + 1e-6)
+        pts = [(x*s, y*s, z*s) for (x,y,z) in pts]
+
+        return [{"x":x, "y":y, "z":z} for (x,y,z) in pts]
+
+    def extract_keypoints(self, frame_rgb):
+        results = self.pose.process(frame_rgb)
+        
+        # Use pose_world_landmarks for true 3D
+        if not results.pose_world_landmarks:
+            return None
+            
+        lm = results.pose_world_landmarks.landmark
+        
+        # Debug print for first frame (or occasionally)
+        # xs = [p.x for p in lm]; ys = [p.y for p in lm]; zs = [p.z for p in lm]
+        # print(f"DEBUG: x-range ({min(xs):.2f}, {max(xs):.2f})")
+        
+        return self.normalize_frame(lm)
     
     def process_frames(self, frames: List[np.ndarray]) -> List[Dict[str, Any]]:
         """
         Process video frames and extract pose landmarks
-        
-        Args:
-            frames: List of video frames (BGR format)
-        
-        Returns:
-            List of dictionaries containing pose data for each frame
         """
         all_pose_data = []
         
-        for frame_idx, frame in enumerate(frames):
-            # Convert BGR to RGB (MediaPipe uses RGB)
+        for frame in frames:
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            landmarks = self.extract_keypoints(rgb_frame)
             
-            # Process frame
-            results = self.pose.process(rgb_frame)
-            
-            frame_data = {
-                "frame_index": frame_idx,
-                "landmarks": [],
-                "pose_detected": False
-            }
-            
-            if results.pose_landmarks:
-                frame_data["pose_detected"] = True
-                
-                # Extract landmark data
-                for idx, landmark in enumerate(results.pose_landmarks.landmark):
-                    frame_data["landmarks"].append({
-                        "id": idx,
-                        "x": landmark.x,  # Normalized [0, 1]
-                        "y": landmark.y,  # Normalized [0, 1]
-                        "z": landmark.z,  # Depth (relative to hips)
-                        "visibility": landmark.visibility  # Confidence [0, 1]
-                    })
-            
-            all_pose_data.append(frame_data)
+            # Structure: { "landmarks": [ {x,y,z}, ... ] }
+            if landmarks:
+                all_pose_data.append({"landmarks": landmarks})
+            else:
+                # Keep frame sync with empty landmarks
+                all_pose_data.append({"landmarks": []})
         
         return all_pose_data
-    
-    def get_landmark_names(self) -> List[str]:
-        """
-        Get list of all MediaPipe landmark names
-        
-        Returns:
-            List of 33 landmark names
-        """
-        return [
-            "NOSE", "LEFT_EYE_INNER", "LEFT_EYE", "LEFT_EYE_OUTER",
-            "RIGHT_EYE_INNER", "RIGHT_EYE", "RIGHT_EYE_OUTER",
-            "LEFT_EAR", "RIGHT_EAR", "MOUTH_LEFT", "MOUTH_RIGHT",
-            "LEFT_SHOULDER", "RIGHT_SHOULDER",
-            "LEFT_ELBOW", "RIGHT_ELBOW",
-            "LEFT_WRIST", "RIGHT_WRIST",
-            "LEFT_PINKY", "RIGHT_PINKY",
-            "LEFT_INDEX", "RIGHT_INDEX",
-            "LEFT_THUMB", "RIGHT_THUMB",
-            "LEFT_HIP", "RIGHT_HIP",
-            "LEFT_KNEE", "RIGHT_KNEE",
-            "LEFT_ANKLE", "RIGHT_ANKLE",
-            "LEFT_HEEL", "RIGHT_HEEL",
-            "LEFT_FOOT_INDEX", "RIGHT_FOOT_INDEX"
-        ]
-    
-    def filter_low_confidence(self, pose_data: List[Dict], min_visibility: float = 0.5) -> List[Dict]:
-        """
-        Filter out landmarks with low confidence
-        
-        Args:
-            pose_data: List of pose data dictionaries
-            min_visibility: Minimum visibility threshold
-        
-        Returns:
-            Filtered pose data
-        """
-        filtered_data = []
-        
-        for frame_data in pose_data:
-            filtered_landmarks = []
-            
-            for landmark in frame_data.get("landmarks", []):
-                if landmark["visibility"] >= min_visibility:
-                    filtered_landmarks.append(landmark)
-                else:
-                    # Keep structure but mark as invalid
-                    filtered_landmarks.append({
-                        **landmark,
-                        "valid": False
-                    })
-            
-            filtered_data.append({
-                **frame_data,
-                "landmarks": filtered_landmarks
-            })
-        
-        return filtered_data
-    
+
     def close(self):
         """Clean up MediaPipe resources"""
         self.pose.close()

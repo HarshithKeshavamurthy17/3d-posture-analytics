@@ -2,36 +2,59 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import './AnalyticsDashboard.css'
 
 export default function AnalyticsDashboard({ analytics }) {
-    if (!analytics) {
+    if (!analytics || Object.keys(analytics).length === 0) {
         return (
             <div className="dashboard-placeholder">
-                <p>Analytics will appear here after video processing</p>
+                <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+                    <svg style={{ width: '64px', height: '64px', margin: '0 auto 1rem', opacity: 0.5 }} fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                    </svg>
+                    <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#e5e7eb' }}>Analytics Not Available</h3>
+                    <p style={{ color: '#9ca3af', marginBottom: '1rem' }}>
+                        Analytics computation is currently disabled in the backend.
+                    </p>
+                    <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                        Please enable analytics computation in the backend to view detailed metrics.
+                    </p>
+                </div>
             </div>
         )
     }
 
-    const { joint_angles, posture_metrics, motion_metrics, symmetry_score, anomalies, summary } = analytics
+    // Safely extract analytics data with defaults
+    const joint_angles = analytics.joint_angles || {}
+    const posture_metrics = analytics.posture_metrics || { overall_posture_score: 0 }
+    const motion_metrics = analytics.motion_metrics || { range_of_motion: {}, max_velocity: 0 }
+    const symmetry_score = analytics.symmetry_score || 0
+    const anomalies = analytics.anomalies || { anomaly_count: 0 }
+    const summary = analytics.summary || { insights: [], recommendations: [] }
 
     // Prepare data for joint angle chart
-    const angleData = Object.keys(joint_angles).reduce((acc, key, idx) => {
-        const frames = joint_angles[key]
-        frames.forEach((angle, frameIdx) => {
-            if (!acc[frameIdx]) {
-                acc[frameIdx] = { frame: frameIdx }
-            }
-            acc[frameIdx][key] = angle
-        })
-        return acc
-    }, [])
+    const angleData = Object.keys(joint_angles).length > 0 
+        ? Object.keys(joint_angles).reduce((acc, key, idx) => {
+            const frames = joint_angles[key] || []
+            frames.forEach((angle, frameIdx) => {
+                if (angle !== null && angle !== undefined) {
+                    if (!acc[frameIdx]) {
+                        acc[frameIdx] = { frame: frameIdx }
+                    }
+                    acc[frameIdx][key] = angle
+                }
+            })
+            return acc
+        }, [])
+        : []
 
-    // Get top 5 joints by range of motion
-    const romData = Object.entries(motion_metrics.range_of_motion || {})
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 8)
-        .map(([joint, value]) => ({
-            joint: `Joint ${joint}`,
-            rom: value.toFixed(2)
-        }))
+    // Get top joints by range of motion
+    const romData = Object.keys(motion_metrics.range_of_motion || {}).length > 0
+        ? Object.entries(motion_metrics.range_of_motion)
+            .sort(([, a], [, b]) => (b || 0) - (a || 0))
+            .slice(0, 8)
+            .map(([joint, value]) => ({
+                joint: `Joint ${joint}`,
+                rom: (value || 0).toFixed(2)
+            }))
+        : []
 
     return (
         <div className="analytics-dashboard">
@@ -46,7 +69,7 @@ export default function AnalyticsDashboard({ analytics }) {
                         </svg>
                     </div>
                     <div className="stat-content">
-                        <div className="stat-value">{posture_metrics.overall_posture_score.toFixed(1)}</div>
+                        <div className="stat-value">{(posture_metrics.overall_posture_score || 0).toFixed(1)}</div>
                         <div className="stat-label">Posture Score</div>
                     </div>
                 </div>
@@ -58,7 +81,7 @@ export default function AnalyticsDashboard({ analytics }) {
                         </svg>
                     </div>
                     <div className="stat-content">
-                        <div className="stat-value">{symmetry_score.toFixed(1)}</div>
+                        <div className="stat-value">{(symmetry_score || 0).toFixed(1)}</div>
                         <div className="stat-label">Symmetry Score</div>
                     </div>
                 </div>
@@ -70,7 +93,7 @@ export default function AnalyticsDashboard({ analytics }) {
                         </svg>
                     </div>
                     <div className="stat-content">
-                        <div className="stat-value">{anomalies.anomaly_count}</div>
+                        <div className="stat-value">{anomalies.anomaly_count || 0}</div>
                         <div className="stat-label">Anomalies</div>
                     </div>
                 </div>
@@ -82,7 +105,7 @@ export default function AnalyticsDashboard({ analytics }) {
                         </svg>
                     </div>
                     <div className="stat-content">
-                        <div className="stat-value">{motion_metrics.max_velocity.toFixed(2)}</div>
+                        <div className="stat-value">{(motion_metrics.max_velocity || 0).toFixed(2)}</div>
                         <div className="stat-label">Max Velocity</div>
                     </div>
                 </div>
@@ -93,45 +116,65 @@ export default function AnalyticsDashboard({ analytics }) {
                 {/* Joint Angles Over Time */}
                 <div className="chart-card glass-card">
                     <h3 className="chart-title">Joint Angles Over Time</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={angleData.slice(0, 100)}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                            <XAxis dataKey="frame" stroke="#9ca3af" />
-                            <YAxis stroke="#9ca3af" />
-                            <Tooltip
-                                contentStyle={{ background: '#1f1f1f', border: '1px solid #333', borderRadius: '0.5rem' }}
-                                labelStyle={{ color: '#9ca3af' }}
-                            />
-                            <Legend wrapperStyle={{ color: '#9ca3af' }} />
-                            <Line type="monotone" dataKey="left_knee" stroke="#9370db" dot={false} strokeWidth={2} />
-                            <Line type="monotone" dataKey="right_knee" stroke="#ff69b4" dot={false} strokeWidth={2} />
-                            <Line type="monotone" dataKey="left_elbow" stroke="#32cd32" dot={false} strokeWidth={2} />
-                            <Line type="monotone" dataKey="right_elbow" stroke="#ff6347" dot={false} strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
+                    {angleData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={300}>
+                            <LineChart data={angleData.slice(0, 100)}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                                <XAxis dataKey="frame" stroke="#9ca3af" />
+                                <YAxis stroke="#9ca3af" />
+                                <Tooltip
+                                    contentStyle={{ background: '#1f1f1f', border: '1px solid #333', borderRadius: '0.5rem' }}
+                                    labelStyle={{ color: '#9ca3af' }}
+                                />
+                                <Legend wrapperStyle={{ color: '#9ca3af' }} />
+                                {Object.keys(joint_angles).includes('left_knee') && (
+                                    <Line type="monotone" dataKey="left_knee" stroke="#9370db" dot={false} strokeWidth={2} />
+                                )}
+                                {Object.keys(joint_angles).includes('right_knee') && (
+                                    <Line type="monotone" dataKey="right_knee" stroke="#ff69b4" dot={false} strokeWidth={2} />
+                                )}
+                                {Object.keys(joint_angles).includes('left_elbow') && (
+                                    <Line type="monotone" dataKey="left_elbow" stroke="#32cd32" dot={false} strokeWidth={2} />
+                                )}
+                                {Object.keys(joint_angles).includes('right_elbow') && (
+                                    <Line type="monotone" dataKey="right_elbow" stroke="#ff6347" dot={false} strokeWidth={2} />
+                                )}
+                            </LineChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
+                            No joint angle data available
+                        </div>
+                    )}
                 </div>
 
                 {/* Range of Motion */}
                 <div className="chart-card glass-card">
                     <h3 className="chart-title">Range of Motion (Top Joints)</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={romData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                            <XAxis dataKey="joint" stroke="#9ca3af" />
-                            <YAxis stroke="#9ca3af" />
-                            <Tooltip
-                                contentStyle={{ background: '#1f1f1f', border: '1px solid #333', borderRadius: '0.5rem' }}
-                                labelStyle={{ color: '#9ca3af' }}
-                            />
-                            <Bar dataKey="rom" fill="url(#colorGradient)" />
-                            <defs>
-                                <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#0ea5e9" stopOpacity={1} />
-                                    <stop offset="100%" stopColor="#d946ef" stopOpacity={1} />
-                                </linearGradient>
-                            </defs>
-                        </BarChart>
-                    </ResponsiveContainer>
+                    {romData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={romData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                                <XAxis dataKey="joint" stroke="#9ca3af" />
+                                <YAxis stroke="#9ca3af" />
+                                <Tooltip
+                                    contentStyle={{ background: '#1f1f1f', border: '1px solid #333', borderRadius: '0.5rem' }}
+                                    labelStyle={{ color: '#9ca3af' }}
+                                />
+                                <Bar dataKey="rom" fill="url(#colorGradient)" />
+                                <defs>
+                                    <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#0ea5e9" stopOpacity={1} />
+                                        <stop offset="100%" stopColor="#d946ef" stopOpacity={1} />
+                                    </linearGradient>
+                                </defs>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
+                            No range of motion data available
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -145,12 +188,19 @@ export default function AnalyticsDashboard({ analytics }) {
                         Insights
                     </h3>
                     <ul className="insights-list">
-                        {summary.insights.map((insight, idx) => (
-                            <li key={idx} className="insight-item">
+                        {summary.insights && summary.insights.length > 0 ? (
+                            summary.insights.map((insight, idx) => (
+                                <li key={idx} className="insight-item">
+                                    <span className="bullet">•</span>
+                                    {insight}
+                                </li>
+                            ))
+                        ) : (
+                            <li className="insight-item">
                                 <span className="bullet">•</span>
-                                {insight}
+                                No insights available. Enable analytics computation in the backend.
                             </li>
-                        ))}
+                        )}
                     </ul>
                 </div>
 
@@ -162,12 +212,19 @@ export default function AnalyticsDashboard({ analytics }) {
                         Recommendations
                     </h3>
                     <ul className="recommendations-list">
-                        {summary.recommendations.map((rec, idx) => (
-                            <li key={idx} className="recommendation-item">
+                        {summary.recommendations && summary.recommendations.length > 0 ? (
+                            summary.recommendations.map((rec, idx) => (
+                                <li key={idx} className="recommendation-item">
+                                    <span className="check-icon">✓</span>
+                                    {rec}
+                                </li>
+                            ))
+                        ) : (
+                            <li className="recommendation-item">
                                 <span className="check-icon">✓</span>
-                                {rec}
+                                Enable analytics computation to get personalized recommendations.
                             </li>
-                        ))}
+                        )}
                     </ul>
                 </div>
             </div>

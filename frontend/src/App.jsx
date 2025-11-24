@@ -80,7 +80,7 @@ function App() {
 
         {activeTab === 'viewer' && results && (
           <div className="viewer-section">
-            <ThreeDViewer poseData={results.pose_data} />
+            <ThreeDViewer poseData={results.frames} />
             <div className="viewer-info glass-card">
               <div className="info-item">
                 <span className="info-label">Frames Processed:</span>

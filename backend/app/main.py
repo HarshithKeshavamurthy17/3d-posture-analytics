@@ -99,28 +99,30 @@ async def upload_video(file: UploadFile = File(...)):
         
         # Step 2: Run pose estimation on frames
         print(f"[{job_id}] Running pose estimation...")
-        pose_data_2d = pose_estimator.process_frames(frames)
+        # This now returns the normalized 3D frames structure directly
+        frames_data = pose_estimator.process_frames(frames)
         print(f"[{job_id}] Pose estimation complete")
         
-        # Step 3: Reconstruct 3D poses
-        print(f"[{job_id}] Reconstructing 3D poses...")
-        pose_data_3d = pose_reconstructor.reconstruct_3d(pose_data_2d)
-        print(f"[{job_id}] 3D reconstruction complete")
+        # Step 3: Reconstruct 3D poses - SKIPPED (PoseEstimator now does 3D)
+        # print(f"[{job_id}] Reconstructing 3D poses...")
+        # pose_data_3d = pose_reconstructor.reconstruct_3d(pose_data_2d)
+        # print(f"[{job_id}] 3D reconstruction complete")
         
-        # Step 4: Compute analytics
-        print(f"[{job_id}] Computing analytics...")
-        analytics = analytics_engine.compute_analytics(pose_data_3d)
-        print(f"[{job_id}] Analytics complete")
+        # Step 4: Compute analytics - SKIPPED
+        # print(f"[{job_id}] Computing analytics...")
+        # analytics = analytics_engine.compute_analytics(pose_data_3d)
+        # print(f"[{job_id}] Analytics complete")
+        analytics = {} 
         
         # Clean up uploaded video
         video_path.unlink()
         
-        # Return results
+        # Return results EXACTLY as requested
         return JSONResponse(content={
             "job_id": job_id,
             "filename": file.filename,
             "frames_processed": len(frames),
-            "pose_data": pose_data_3d,
+            "frames": frames_data, # List of { "landmarks": [...] }
             "analytics": analytics,
             "status": "success"
         })
