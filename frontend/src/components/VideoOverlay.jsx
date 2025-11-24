@@ -111,9 +111,10 @@ export default function VideoOverlay({ videoUrl, frames, anomalyFrames = [], inj
         const ctx = canvas.getContext('2d')
         const frameData = frames[currentFrame]
 
-        if (!frameData || !frameData.landmarks) return
+        // Use landmarks_2d for video overlay (2D screen coordinates)
+        if (!frameData || !frameData.landmarks_2d) return
 
-        const landmarks = frameData.landmarks
+        const landmarks = frameData.landmarks_2d
         const width = canvas.width
         const height = canvas.height
 
