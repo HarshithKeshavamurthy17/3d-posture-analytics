@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 import os
 import shutil
 from pathlib import Path
@@ -31,8 +31,10 @@ app.add_middleware(
 # Create necessary directories
 UPLOAD_DIR = Path("uploads")
 OUTPUT_DIR = Path("outputs")
+VIDEO_DIR = Path("uploads/videos")  # Store processed videos
 UPLOAD_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR.mkdir(exist_ok=True)
+VIDEO_DIR.mkdir(exist_ok=True, parents=True)
 
 # Initialize services
 video_processor = VideoProcessor()
@@ -117,15 +119,21 @@ async def upload_video(file: UploadFile = File(...)):
             print(f"[{job_id}] Analytics computation failed: {analytics_error}")
             analytics = {}  # Gracefully degrade if analytics fail 
         
-        # Clean up uploaded video
+        # Save video for playback with overlay
+        saved_video_path = VIDEO_DIR / f"{job_id}{file_ext}"
+        shutil.copy(str(video_path), str(saved_video_path))
+        print(f"[{job_id}] Video saved for playback")
+        
+        # Clean up temporary uploaded video
         video_path.unlink()
         
-        # Return results EXACTLY as requested
+        # Return results with video URL
         return JSONResponse(content={
             "job_id": job_id,
             "filename": file.filename,
             "frames_processed": len(frames),
             "frames": frames_data, # List of { "landmarks": [...] }
+            "video_url": f"/api/video/{job_id}",  # NEW: URL to access video
             "analytics": analytics,
             "status": "success"
         })
@@ -135,6 +143,36 @@ async def upload_video(file: UploadFile = File(...)):
         raise HTTPException(
             status_code=500,
             detail=f"Processing failed: {str(e)}"
+        )
+
+
+@app.get("/api/video/{job_id}")
+async def get_video(job_id: str):
+    """Serve video file for overlay playback"""
+    try:
+        # Find video file with any extension
+        video_files = list(VIDEO_DIR.glob(f"{job_id}.*"))
+        
+        if not video_files:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Video not found for job_id: {job_id}"
+            )
+        
+        video_path = video_files[0]
+        
+        return FileResponse(
+            path=str(video_path),
+            media_type="video/mp4",
+            filename=f"{job_id}{video_path.suffix}"
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to serve video: {str(e)}"
         )
 
 
