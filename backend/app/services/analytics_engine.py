@@ -59,13 +59,20 @@ class AnalyticsEngine:
         }
         
         for frame_data in pose_data:
-            if not frame_data["pose_detected"] or not frame_data["landmarks"]:
+            # Handle new format: {"landmarks": [{x,y,z}, ...]}
+            if "landmarks" not in frame_data or not frame_data["landmarks"]:
                 # Append None for missing frames
                 for key in angles:
                     angles[key].append(None)
                 continue
             
-            landmarks = {lm["id"]: lm for lm in frame_data["landmarks"]}
+            # Convert list to dict with index as id
+            landmarks_list = frame_data["landmarks"]
+            landmarks = {}
+            for idx, lm in enumerate(landmarks_list):
+                if lm and isinstance(lm, dict):
+                    landmarks[idx] = lm
+            
             
             # Left shoulder angle (shoulder-elbow-wrist)
             if all(k in landmarks for k in [11, 13, 15]):
@@ -174,10 +181,12 @@ class AnalyticsEngine:
         shoulder_balances = []
         
         for frame_data in pose_data:
-            if not frame_data["pose_detected"] or not frame_data["landmarks"]:
+            if "landmarks" not in frame_data or not frame_data["landmarks"]:
                 continue
             
-            landmarks = {lm["id"]: lm for lm in frame_data["landmarks"]}
+            # Convert list to dict
+            landmarks_list = frame_data["landmarks"]
+            landmarks = {idx: lm for idx, lm in enumerate(landmarks_list) if lm and isinstance(lm, dict)}
             
             # Spine alignment (nose, shoulders, hips)
             if all(k in landmarks for k in [0, 11, 12, 23, 24]):
@@ -228,11 +237,13 @@ class AnalyticsEngine:
         velocities = {i: [] for i in range(33)}  # 33 landmarks
         
         for i in range(len(pose_data) - 1):
-            if not pose_data[i]["pose_detected"] or not pose_data[i + 1]["pose_detected"]:
+            if "landmarks" not in pose_data[i] or not pose_data[i]["landmarks"]:
+                continue
+            if "landmarks" not in pose_data[i + 1] or not pose_data[i + 1]["landmarks"]:
                 continue
             
-            landmarks_curr = {lm["id"]: lm for lm in pose_data[i]["landmarks"]}
-            landmarks_next = {lm["id"]: lm for lm in pose_data[i + 1]["landmarks"]}
+            landmarks_curr = {idx: lm for idx, lm in enumerate(pose_data[i]["landmarks"]) if lm and isinstance(lm, dict)}
+            landmarks_next = {idx: lm for idx, lm in enumerate(pose_data[i + 1]["landmarks"]) if lm and isinstance(lm, dict)}
             
             for lm_id in range(33):
                 if lm_id in landmarks_curr and lm_id in landmarks_next:
@@ -264,14 +275,14 @@ class AnalyticsEngine:
         positions = {i: {"x": [], "y": [], "z": []} for i in range(33)}
         
         for frame_data in pose_data:
-            if not frame_data["pose_detected"]:
+            if "landmarks" not in frame_data or not frame_data["landmarks"]:
                 continue
             
-            for landmark in frame_data["landmarks"]:
-                lm_id = landmark["id"]
-                positions[lm_id]["x"].append(landmark["x"])
-                positions[lm_id]["y"].append(landmark["y"])
-                positions[lm_id]["z"].append(landmark["z"])
+            for lm_id, landmark in enumerate(frame_data["landmarks"]):
+                if landmark and isinstance(landmark, dict):
+                    positions[lm_id]["x"].append(landmark["x"])
+                    positions[lm_id]["y"].append(landmark["y"])
+                    positions[lm_id]["z"].append(landmark.get("z", 0))
         
         rom = {}
         for lm_id, coords in positions.items():
@@ -303,10 +314,10 @@ class AnalyticsEngine:
         ]
         
         for frame_data in pose_data:
-            if not frame_data["pose_detected"]:
+            if "landmarks" not in frame_data or not frame_data["landmarks"]:
                 continue
             
-            landmarks = {lm["id"]: lm for lm in frame_data["landmarks"]}
+            landmarks = {idx: lm for idx, lm in enumerate(frame_data["landmarks"]) if lm and isinstance(lm, dict)}
             
             frame_symmetry = []
             for left_id, right_id in symmetric_pairs:
@@ -331,11 +342,13 @@ class AnalyticsEngine:
         velocities = []
         
         for i in range(len(pose_data) - 1):
-            if not pose_data[i]["pose_detected"] or not pose_data[i + 1]["pose_detected"]:
+            if "landmarks" not in pose_data[i] or not pose_data[i]["landmarks"]:
+                continue
+            if "landmarks" not in pose_data[i + 1] or not pose_data[i + 1]["landmarks"]:
                 continue
             
-            landmarks_curr = {lm["id"]: lm for lm in pose_data[i]["landmarks"]}
-            landmarks_next = {lm["id"]: lm for lm in pose_data[i + 1]["landmarks"]}
+            landmarks_curr = {idx: lm for idx, lm in enumerate(pose_data[i]["landmarks"]) if lm and isinstance(lm, dict)}
+            landmarks_next = {idx: lm for idx, lm in enumerate(pose_data[i + 1]["landmarks"]) if lm and isinstance(lm, dict)}
             
             total_velocity = 0
             for lm_id in range(33):

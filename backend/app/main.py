@@ -108,11 +108,14 @@ async def upload_video(file: UploadFile = File(...)):
         # pose_data_3d = pose_reconstructor.reconstruct_3d(pose_data_2d)
         # print(f"[{job_id}] 3D reconstruction complete")
         
-        # Step 4: Compute analytics - SKIPPED
-        # print(f"[{job_id}] Computing analytics...")
-        # analytics = analytics_engine.compute_analytics(pose_data_3d)
-        # print(f"[{job_id}] Analytics complete")
-        analytics = {} 
+        # Step 4: Compute analytics
+        print(f"[{job_id}] Computing analytics...")
+        try:
+            analytics = analytics_engine.compute_analytics(frames_data)
+            print(f"[{job_id}] Analytics complete")
+        except Exception as analytics_error:
+            print(f"[{job_id}] Analytics computation failed: {analytics_error}")
+            analytics = {}  # Gracefully degrade if analytics fail 
         
         # Clean up uploaded video
         video_path.unlink()
