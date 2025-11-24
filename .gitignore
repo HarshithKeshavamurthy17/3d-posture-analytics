@@ -1,0 +1,38 @@
+**/venv/
+**/env/
+**/ENV/
+**/.DS_Store
+
+# Frontend
+**/node_modules/
+**/dist/
+**/.vite/
+**/*.local
+
+# Backend
+**/__pycache__/
+**/*.pyc
+uploads/*
+!uploads/.gitkeep
+outputs/*
+!outputs/.gitkeep
+*.pyc
+.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
