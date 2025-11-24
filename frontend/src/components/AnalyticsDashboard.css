@@ -510,6 +510,275 @@
     animation-delay: 0.4s;
 }
 
+/* AI Injury Prediction Section */
+.ai-injury-section {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(245, 158, 11, 0.05) 100%);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 1rem;
+    padding: 2rem;
+}
+
+.ai-risk-banner {
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+    border: 2px solid;
+    transition: all 0.3s ease;
+}
+
+.ai-risk-banner.risk-safe {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.ai-risk-banner.risk-caution {
+    background: rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+.ai-risk-banner.risk-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.4);
+}
+
+.ai-risk-banner.risk-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.risk-banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.risk-level-display {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.risk-icon {
+    font-size: 3rem;
+}
+
+.risk-level-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e5e7eb;
+}
+
+.risk-confidence {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    margin-top: 0.25rem;
+}
+
+.risk-summary {
+    color: #e5e7eb;
+    font-size: 0.875rem;
+}
+
+/* Injury Predictions Grid */
+.injury-predictions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.injury-prediction-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.injury-prediction-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+.injury-prediction-card.severity-high {
+    border-left: 4px solid #ef4444;
+}
+
+.injury-prediction-card.severity-moderate {
+    border-left: 4px solid #f59e0b;
+}
+
+.injury-prediction-card.severity-low {
+    border-left: 4px solid #fbbf24;
+}
+
+.injury-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.injury-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    flex: 1;
+}
+
+.injury-icon {
+    font-size: 2rem;
+}
+
+.injury-type {
+    color: #e5e7eb;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.body-part {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0 0;
+}
+
+.risk-score-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.score-circle-mini {
+    position: relative;
+    width: 70px;
+    height: 70px;
+}
+
+.score-circle-mini svg {
+    width: 100%;
+    height: 100%;
+}
+
+.score-text-mini {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #e5e7eb;
+}
+
+.severity-label {
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.severity-label.severity-high {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.severity-label.severity-moderate {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.severity-label.severity-low {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fbbf24;
+}
+
+.injury-description {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.warning-signs,
+.prevention-tips {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 0.5rem;
+}
+
+.subsection-title {
+    color: #e5e7eb;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.warning-signs ul,
+.prevention-tips ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.warning-signs li,
+.prevention-tips li {
+    color: #9ca3af;
+    font-size: 0.813rem;
+    line-height: 1.5;
+    padding: 0.25rem 0;
+    padding-left: 1.25rem;
+    position: relative;
+}
+
+.warning-signs li::before {
+    content: "⚠";
+    position: absolute;
+    left: 0;
+    color: #f59e0b;
+}
+
+.prevention-tips li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #10b981;
+}
+
+.prediction-confidence {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    color: #9ca3af;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.ai-recommendations {
+    margin-bottom: 1.5rem;
+}
+
+.ai-disclaimer {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    color: #9ca3af;
+    font-size: 0.813rem;
+    line-height: 1.6;
+}
+
+.ai-disclaimer strong {
+    color: #e5e7eb;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .analytics-hero {
@@ -536,5 +805,13 @@
 
     .score-number {
         font-size: 2.5rem;
+    }
+
+    .injury-predictions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ai-injury-section {
+        padding: 1rem;
     }
 }

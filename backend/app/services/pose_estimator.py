@@ -39,43 +39,34 @@ class PoseEstimator:
     def extract_keypoints(self, frame_rgb):
         results = self.pose.process(frame_rgb)
         
-        # Check if pose was detected
-        if not results.pose_world_landmarks or not results.pose_landmarks:
-            return None, None
+        # Use pose_world_landmarks for true 3D
+        if not results.pose_world_landmarks:
+            return None
             
-        # Get 3D world landmarks (for 3D viewer)
-        lm_3d = results.pose_world_landmarks.landmark
-        landmarks_3d = self.normalize_frame(lm_3d)
+        lm = results.pose_world_landmarks.landmark
         
-        # Get 2D screen landmarks (for video overlay)
-        lm_2d = results.pose_landmarks.landmark
-        landmarks_2d = [{"x": p.x, "y": p.y, "z": p.z} for p in lm_2d]
+        # Debug print for first frame (or occasionally)
+        # xs = [p.x for p in lm]; ys = [p.y for p in lm]; zs = [p.z for p in lm]
+        # print(f"DEBUG: x-range ({min(xs):.2f}, {max(xs):.2f})")
         
-        return landmarks_3d, landmarks_2d
+        return self.normalize_frame(lm)
     
     def process_frames(self, frames: List[np.ndarray]) -> List[Dict[str, Any]]:
         """
         Process video frames and extract pose landmarks
-        Returns both 3D (for viewer) and 2D (for video overlay) landmarks
         """
         all_pose_data = []
         
         for frame in frames:
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            landmarks_3d, landmarks_2d = self.extract_keypoints(rgb_frame)
+            landmarks = self.extract_keypoints(rgb_frame)
             
-            # Structure: { "landmarks": [...], "landmarks_2d": [...] }
-            if landmarks_3d and landmarks_2d:
-                all_pose_data.append({
-                    "landmarks": landmarks_3d,  # 3D normalized for viewer
-                    "landmarks_2d": landmarks_2d  # 2D screen coords for video overlay
-                })
+            # Structure: { "landmarks": [ {x,y,z}, ... ] }
+            if landmarks:
+                all_pose_data.append({"landmarks": landmarks})
             else:
                 # Keep frame sync with empty landmarks
-                all_pose_data.append({
-                    "landmarks": [],
-                    "landmarks_2d": []
-                })
+                all_pose_data.append({"landmarks": []})
         
         return all_pose_data
 

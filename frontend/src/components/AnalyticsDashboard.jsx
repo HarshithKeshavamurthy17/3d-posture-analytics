@@ -30,6 +30,7 @@ export default function AnalyticsDashboard({ analytics }) {
     const risks = analytics.risk_assessment || {}
     const movement = analytics.movement_quality || {}
     const jointAngles = analytics.joint_angles || {}
+    const aiInjury = analytics.ai_injury_prediction || {}
 
     const overallScore = summary.overall_score || 0
     const grade = summary.grade || 'N/A'
@@ -134,6 +135,143 @@ export default function AnalyticsDashboard({ analytics }) {
                     </div>
                 )}
             </section>
+
+            {/* AI Injury Risk Prediction Section - PROMINENT */}
+            {aiInjury && aiInjury.predictions && (
+                <section className="analytics-section ai-injury-section">
+                    <div className="section-header">
+                        <h2 className="section-title">🤖 AI Injury Risk Prediction</h2>
+                        <p className="section-subtitle">
+                            Machine learning analysis of movement patterns to predict potential injury risks
+                        </p>
+                    </div>
+
+                    {/* Overall Risk Level */}
+                    <div className={`ai-risk-banner risk-${aiInjury.overall_color}`}>
+                        <div className="risk-banner-content">
+                            <div className="risk-level-display">
+                                <div className="risk-icon">
+                                    {aiInjury.overall_color === 'safe' && '✅'}
+                                    {aiInjury.overall_color === 'caution' && '⚠️'}
+                                    {aiInjury.overall_color === 'warning' && '🚨'}
+                                    {aiInjury.overall_color === 'danger' && '🔴'}
+                                </div>
+                                <div>
+                                    <div className="risk-level-text">{aiInjury.overall_risk_level} Risk</div>
+                                    <div className="risk-confidence">AI Confidence: {aiInjury.ai_confidence}%</div>
+                                </div>
+                            </div>
+                            <div className="risk-summary">
+                                {aiInjury.total_risks_detected} potential risk{aiInjury.total_risks_detected !== 1 ? 's' : ''} detected
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Injury Predictions */}
+                    <div className="injury-predictions-grid">
+                        {aiInjury.predictions.map((prediction, idx) => (
+                            <div key={idx} className={`injury-prediction-card severity-${prediction.severity.toLowerCase()}`}>
+                                <div className="injury-header">
+                                    <div className="injury-title">
+                                        <span className="injury-icon">
+                                            {prediction.body_part === 'Knee' && '🦵'}
+                                            {prediction.body_part === 'Spine' || prediction.body_part === 'Lower Back' && '🔙'}
+                                            {prediction.body_part === 'Shoulder' && '💪'}
+                                            {prediction.body_part === 'Hip' && '🏃'}
+                                            {prediction.body_part === 'Ankle' && '👟'}
+                                            {prediction.body_part === 'Overall' && '✅'}
+                                        </span>
+                                        <div>
+                                            <h4 className="injury-type">{prediction.injury_type}</h4>
+                                            <p className="body-part">{prediction.body_part}</p>
+                                        </div>
+                                    </div>
+                                    <div className="risk-score-badge">
+                                        <div className="score-circle-mini">
+                                            <svg viewBox="0 0 100 100">
+                                                <circle cx="50" cy="50" r="45" fill="none" stroke="#2a2a2a" strokeWidth="8" />
+                                                <circle
+                                                    cx="50"
+                                                    cy="50"
+                                                    r="45"
+                                                    fill="none"
+                                                    stroke={
+                                                        prediction.risk_score >= 70 ? '#ef4444' :
+                                                            prediction.risk_score >= 50 ? '#f59e0b' :
+                                                                prediction.risk_score >= 30 ? '#fbbf24' :
+                                                                    '#10b981'
+                                                    }
+                                                    strokeWidth="8"
+                                                    strokeDasharray={`${prediction.risk_score * 2.83} 283`}
+                                                    strokeLinecap="round"
+                                                    transform="rotate(-90 50 50)"
+                                                />
+                                            </svg>
+                                            <div className="score-text-mini">{prediction.risk_score}</div>
+                                        </div>
+                                        <span className={`severity-label severity-${prediction.severity.toLowerCase()}`}>
+                                            {prediction.severity}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <p className="injury-description">{prediction.description}</p>
+
+                                {prediction.warning_signs && prediction.warning_signs.length > 0 && (
+                                    <div className="warning-signs">
+                                        <h5 className="subsection-title">⚠️ Warning Signs Detected:</h5>
+                                        <ul>
+                                            {prediction.warning_signs.map((sign, i) => (
+                                                <li key={i}>{sign}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {prediction.prevention_tips && prediction.prevention_tips.length > 0 && (
+                                    <div className="prevention-tips">
+                                        <h5 className="subsection-title">💡 Prevention Tips:</h5>
+                                        <ul>
+                                            {prediction.prevention_tips.slice(0, 3).map((tip, i) => (
+                                                <li key={i}>{tip}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+
+                                <div className="prediction-confidence">
+                                    Prediction Confidence: {prediction.confidence}%
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* AI Recommendations */}
+                    {aiInjury.recommendations && aiInjury.recommendations.length > 0 && (
+                        <div className="glass-card ai-recommendations">
+                            <div className="card-header">
+                                <span className="card-icon">🎯</span>
+                                <h3 className="card-title">AI-Generated Recommendations</h3>
+                            </div>
+                            <ul className="recommendations-list">
+                                {aiInjury.recommendations.map((rec, idx) => (
+                                    <li key={idx} className="recommendation-item">
+                                        <span className="check-icon">
+                                            {rec.startsWith('⚠️') ? '⚠️' : '✓'}
+                                        </span>
+                                        {rec.replace('⚠️ ', '')}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    <div className="ai-disclaimer">
+                        <strong>⚕️ Medical Disclaimer:</strong> This AI analysis is for informational purposes only and should not replace professional medical advice.
+                        Consult a qualified healthcare provider or sports medicine specialist for personalized assessment and treatment.
+                    </div>
+                </section>
+            )}
 
             {/* Movement Quality Section */}
             <section className="analytics-section">

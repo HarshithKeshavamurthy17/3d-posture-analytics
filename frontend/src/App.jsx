@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import UploadSection from './components/UploadSection'
 import ThreeDViewer from './components/ThreeDViewer'
-import VideoOverlay from './components/VideoOverlay'
 import AnalyticsDashboard from './components/AnalyticsDashboard'
 import './App.css'
 
@@ -44,15 +43,6 @@ function App() {
               <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" />
             </svg>
             Upload
-          </button>
-          <button
-            onClick={() => setActiveTab('video')}
-            className={`tab-btn ${activeTab === 'video' ? 'active' : ''}`}
-          >
-            <svg className="tab-icon" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
-            </svg>
-            Video Analysis
           </button>
           <button
             onClick={() => setActiveTab('viewer')}
@@ -105,17 +95,6 @@ function App() {
                 <span className="info-value success">{results.status}</span>
               </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'video' && results && (
-          <div className="video-section">
-            <VideoOverlay
-              videoUrl={`http://localhost:8000${results.video_url}`}
-              frames={results.frames}
-              anomalyFrames={results.analytics?.anomalies?.anomaly_frames || []}
-              injuryPredictions={results.analytics?.risk_assessment?.injury_predictions || []}
-            />
           </div>
         )}
 
