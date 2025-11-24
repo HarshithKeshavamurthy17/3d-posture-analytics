@@ -127,16 +127,31 @@ export default function VideoOverlay({ videoUrl, frames, anomalyFrames = [], inj
             y: lm.y * height
         }))
 
-        // Draw bones
+        // Enable shadow/glow for better visibility
+        ctx.shadowBlur = 3
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
+
+        // Draw bones with thicker, more visible lines
         POSE_CONNECTIONS.forEach((connection, idx) => {
             const [aIdx, bIdx] = connection
             const a = landmarkPixels[aIdx]
             const b = landmarkPixels[bIdx]
 
             if (a && b) {
-                ctx.strokeStyle = getBoneColor(idx)
-                ctx.lineWidth = 3
+                const color = getBoneColor(idx)
+
+                // Draw thicker outline for visibility
+                ctx.strokeStyle = '#000000'
+                ctx.lineWidth = 8
                 ctx.lineCap = 'round'
+                ctx.beginPath()
+                ctx.moveTo(a.x, a.y)
+                ctx.lineTo(b.x, b.y)
+                ctx.stroke()
+
+                // Draw colored line on top
+                ctx.strokeStyle = color
+                ctx.lineWidth = 5
                 ctx.beginPath()
                 ctx.moveTo(a.x, a.y)
                 ctx.lineTo(b.x, b.y)
@@ -144,12 +159,22 @@ export default function VideoOverlay({ videoUrl, frames, anomalyFrames = [], inj
             }
         })
 
-        // Draw joints
+        // Remove shadow for joints
+        ctx.shadowBlur = 0
+
+        // Draw larger, more visible joints
         landmarkPixels.forEach((lm, idx) => {
             if (lm) {
+                // Draw black outline
+                ctx.fillStyle = '#000000'
+                ctx.beginPath()
+                ctx.arc(lm.x, lm.y, 8, 0, 2 * Math.PI)
+                ctx.fill()
+
+                // Draw white center
                 ctx.fillStyle = '#ffffff'
                 ctx.beginPath()
-                ctx.arc(lm.x, lm.y, 4, 0, 2 * Math.PI)
+                ctx.arc(lm.x, lm.y, 5, 0, 2 * Math.PI)
                 ctx.fill()
             }
         })
