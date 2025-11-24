@@ -70,7 +70,7 @@ async def health_check():
 
 
 @app.post("/api/upload")
-async def upload_video(file: UploadFile = File(...)):
+def upload_video(file: UploadFile = File(...)):
     """
     Upload a video file for pose estimation and analytics
     
@@ -112,9 +112,6 @@ async def upload_video(file: UploadFile = File(...)):
         gc.collect()
         
         # Step 3: Reconstruct 3D poses - SKIPPED (PoseEstimator now does 3D)
-        # print(f"[{job_id}] Reconstructing 3D poses...")
-        # pose_data_3d = pose_reconstructor.reconstruct_3d(pose_data_2d)
-        # print(f"[{job_id}] 3D reconstruction complete")
         
         # Step 4: Compute analytics
         print(f"[{job_id}] Computing analytics...")
@@ -132,8 +129,8 @@ async def upload_video(file: UploadFile = File(...)):
         return JSONResponse(content={
             "job_id": job_id,
             "filename": file.filename,
-            "frames_processed": len(frames),
-            "frames": frames_data, # List of { "landmarks": [...] }
+            "frames_processed": len(pose_data),
+            "frames": pose_data, # List of { "landmarks": [...] }
             "analytics": analytics,
             "status": "success"
         })
