@@ -20,9 +20,17 @@ app = FastAPI(
 )
 
 # Configure CORS
+origins = [
+    "http://localhost:5173",  # Local frontend
+    "http://localhost:3000",  # Alternative local
+    "https://3d-posture-analytics-ai.vercel.app",  # Production frontend
+    "https://3d-posture-analytics-ai.vercel.app/",
+    "*"  # Fallback (might be ignored by some browsers with credentials)
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
