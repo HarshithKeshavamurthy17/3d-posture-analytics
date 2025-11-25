@@ -168,6 +168,9 @@ export default function UploadSection({ onUploadComplete }) {
                                         uploadProgress < 100 ? 'Uploading...' :
                                             'Processing video...'}
                                 </p>
+                                <p className="text-sm text-gray-400 mt-2">
+                                    ⏱️ Processing typically takes 1-2 minutes. Please be patient!
+                                </p>
                             </div>
                         ) : (
                             <div className="button-group">
