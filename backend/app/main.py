@@ -103,8 +103,8 @@ def upload_video(file: UploadFile = File(...)):
         
         # Step 1 & 2: Stream frames and run pose estimation
         print(f"[{job_id}] Processing video stream...")
-        # Use generator to save memory (resizes to 480p max width)
-        frame_generator = video_processor.stream_frames(str(video_path), max_width=480)
+        # Use generator to save memory (resizes to 360p max width for speed)
+        frame_generator = video_processor.stream_frames(str(video_path), max_width=360)
         pose_data = pose_estimator.process_frames(frame_generator)
         print(f"[{job_id}] Processed {len(pose_data)} frames")
         

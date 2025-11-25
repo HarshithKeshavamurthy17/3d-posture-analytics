@@ -5,7 +5,7 @@ from typing import List, Dict, Any
 
 
 class PoseEstimator:
-    def __init__(self, model_complexity=2):
+    def __init__(self, model_complexity=1):
         self.mp_pose = mp.solutions.pose
         self.pose = self.mp_pose.Pose(
             static_image_mode=False,

@@ -12,12 +12,12 @@ class VideoProcessor:
     Handles video frame extraction using OpenCV and FFmpeg
     """
     
-    def __init__(self, target_fps: int = 15):
+    def __init__(self, target_fps: int = 8):
         """
         Initialize video processor
         
         Args:
-            target_fps: Target frames per second for extraction (default: 15)
+            target_fps: Target frames per second for extraction (default: 8)
         """
         self.target_fps = target_fps
     
