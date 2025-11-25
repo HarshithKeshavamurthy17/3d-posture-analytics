@@ -111,9 +111,21 @@ export default function UploadSection({ onUploadComplete }) {
     }
 
     const demoVideos = [
-        { path: '/demo-videos/demo1.mp4', name: 'Demo 1: Squat Exercise', filename: 'demo1.mp4' },
-        { path: '/demo-videos/demo2.mp4', name: 'Demo 2: Running Form', filename: 'demo2.mp4' },
-        { path: '/demo-videos/demo3.mp4', name: 'Demo 3: Yoga Pose', filename: 'demo3.mp4' },
+        {
+            path: 'https://raw.githubusercontent.com/HarshithKeshavamurthy17/3d-posture-analytics/main/frontend/public/demo-videos/demo1.mp4',
+            name: 'Demo 1: Squat Exercise',
+            filename: 'demo1.mp4'
+        },
+        {
+            path: 'https://raw.githubusercontent.com/HarshithKeshavamurthy17/3d-posture-analytics/main/frontend/public/demo-videos/demo2.mp4',
+            name: 'Demo 2: Running Form',
+            filename: 'demo2.mp4'
+        },
+        {
+            path: 'https://raw.githubusercontent.com/HarshithKeshavamurthy17/3d-posture-analytics/main/frontend/public/demo-videos/demo3.mp4',
+            name: 'Demo 3: Yoga Pose',
+            filename: 'demo3.mp4'
+        },
     ]
 
     return (
