@@ -164,7 +164,9 @@ export default function UploadSection({ onUploadComplete }) {
                                 </div>
                                 <p className="progress-text">{uploadProgress}%</p>
                                 <p className="processing-text">
-                                    {uploadProgress < 100 ? 'Uploading...' : 'Processing video...'}
+                                    {uploadProgress === 0 ? 'Connecting to server (may take 30-60s if sleeping)...' :
+                                        uploadProgress < 100 ? 'Uploading...' :
+                                            'Processing video...'}
                                 </p>
                             </div>
                         ) : (

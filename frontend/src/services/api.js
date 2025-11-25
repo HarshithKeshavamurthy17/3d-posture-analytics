@@ -25,6 +25,7 @@ export const uploadVideo = async (file, onProgress) => {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },
+            timeout: 600000, // 10 minutes (backend may sleep on free tier)
             onUploadProgress: (progressEvent) => {
                 const percentCompleted = Math.round(
                     (progressEvent.loaded * 100) / progressEvent.total
@@ -38,6 +39,9 @@ export const uploadVideo = async (file, onProgress) => {
         return response.data;
     } catch (error) {
         console.error('Upload error:', error);
+        if (error.code === 'ECONNABORTED') {
+            throw new Error('Upload timed out. The server may be sleeping. Please try again.');
+        }
         throw error;
     }
 };
