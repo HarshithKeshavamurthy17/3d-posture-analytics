@@ -95,10 +95,55 @@ export default function UploadSection({ onUploadComplete }) {
         }
     }
 
+    const handleDemoSelect = async (demoPath, demoName) => {
+        setError(null)
+        try {
+            // Fetch the demo video from public folder
+            const response = await fetch(demoPath)
+            const blob = await response.blob()
+            const file = new File([blob], demoName, { type: 'video/mp4' })
+
+            setSelectedFile(file)
+            setPreviewUrl(demoPath)
+        } catch (err) {
+            setError('Failed to load demo video. Please upload your own video.')
+        }
+    }
+
+    const demoVideos = [
+        { path: '/demo-videos/demo1.mp4', name: 'Demo 1: Squat Exercise', filename: 'demo1.mp4' },
+        { path: '/demo-videos/demo2.mp4', name: 'Demo 2: Running Form', filename: 'demo2.mp4' },
+        { path: '/demo-videos/demo3.mp4', name: 'Demo 3: Yoga Pose', filename: 'demo3.mp4' },
+    ]
+
     return (
         <div className="upload-section">
             <div className="upload-container glass-card">
                 <h2 className="text-gradient text-3xl font-bold mb-6">Upload Video</h2>
+
+                {/* Demo Videos Section */}
+                {!selectedFile && (
+                    <div className="demo-videos-section mb-6">
+                        <p className="text-gray-300 mb-3 text-center">
+                            🎬 Try a demo video or upload your own
+                        </p>
+                        <div className="demo-videos-grid">
+                            {demoVideos.map((demo, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => handleDemoSelect(demo.path, demo.filename)}
+                                    className="demo-video-btn"
+                                >
+                                    <span className="demo-number">{index + 1}</span>
+                                    <span className="demo-name">{demo.name.split(': ')[1]}</span>
+                                </button>
+                            ))}
+                        </div>
+                        <div className="divider-text">
+                            <span>OR</span>
+                        </div>
+                    </div>
+                )}
 
                 {!selectedFile ? (
                     <div
