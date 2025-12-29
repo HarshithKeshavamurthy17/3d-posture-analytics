@@ -95,36 +95,59 @@ export default function UploadSection({ onUploadComplete }) {
         }
     }
 
-    const handleDemoSelect = async (demoPath, demoName) => {
+    const handleSampleVideoSelect = async (samplePath, sampleName) => {
         setError(null)
+        setUploadProgress(0)
+        
         try {
-            // Fetch the demo video from public folder
-            const response = await fetch(demoPath)
+            // Fetch the sample video from public folder
+            const response = await fetch(samplePath)
+            if (!response.ok) {
+                throw new Error('Failed to fetch sample video')
+            }
             const blob = await response.blob()
-            const file = new File([blob], demoName, { type: 'video/mp4' })
+            const file = new File([blob], sampleName, { type: 'video/mp4' })
 
+            // Set the file and preview first
             setSelectedFile(file)
-            setPreviewUrl(demoPath)
+            setPreviewUrl(samplePath)
+            
+            // Small delay to show the preview before starting upload
+            await new Promise(resolve => setTimeout(resolve, 500))
+            
+            // Now start the upload
+            setIsUploading(true)
+            const result = await uploadVideo(file, (progress) => {
+                setUploadProgress(progress)
+            })
+            
+            // Call parent callback with results
+            onUploadComplete(result)
         } catch (err) {
-            setError('Failed to load demo video. Please upload your own video.')
+            console.error('Sample video error:', err)
+            setError(err.response?.data?.detail || err.message || 'Failed to load sample video. Please try uploading your own video.')
+            setIsUploading(false)
         }
     }
 
-    const demoVideos = [
+    const sampleVideos = [
         {
-            path: '/demo-videos/demo1.mp4',
-            name: 'Demo 1: Squat Exercise',
-            filename: 'demo1.mp4'
+            path: '/sample-videos/149195-795734208.mp4',
+            name: 'Sample Video 1',
+            filename: '149195-795734208.mp4',
+            description: 'Standard Definition'
         },
         {
-            path: '/demo-videos/demo2.mp4',
-            name: 'Demo 2: Running Form',
-            filename: 'demo2.mp4'
+            path: '/sample-videos/2025457-hd_1280_720_30fps.mp4',
+            name: 'Sample Video 2',
+            filename: '2025457-hd_1280_720_30fps.mp4',
+            description: 'HD 720p @ 30fps'
         },
         {
-            path: '/demo-videos/demo3.mp4',
-            name: 'Demo 3: Yoga Pose',
-            filename: 'demo3.mp4'
+            path: '/sample-videos/4108624-uhd_3840_2160_25fps.mp4',
+            name: 'Sample Video 3',
+            filename: '4108624-uhd_3840_2160_25fps.mp4',
+            description: 'UHD 4K @ 25fps'
         },
     ]
 
@@ -133,21 +156,27 @@ export default function UploadSection({ onUploadComplete }) {
             <div className="upload-container glass-card">
                 <h2 className="text-gradient text-3xl font-bold mb-6">Upload Video</h2>
 
-                {/* Demo Videos Section */}
-                {!selectedFile && (
+                {/* Sample Videos Section */}
+                {!selectedFile && !isUploading && (
                     <div className="demo-videos-section mb-6">
                         <p className="text-gray-300 mb-3 text-center">
-                            🎬 Try a demo video or upload your own
+                            🎬 Try a sample video to see how it works, or upload your own
                         </p>
                         <div className="demo-videos-grid">
-                            {demoVideos.map((demo, index) => (
+                            {sampleVideos.map((sample, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => handleDemoSelect(demo.path, demo.filename)}
+                                    onClick={() => handleSampleVideoSelect(sample.path, sample.filename)}
                                     className="demo-video-btn"
+                                    disabled={isUploading}
                                 >
-                                    <span className="demo-number">{index + 1}</span>
-                                    <span className="demo-name">{demo.name.split(': ')[1]}</span>
+                                    <div className="demo-video-content">
+                                        <span className="demo-number">{index + 1}</span>
+                                        <div className="demo-video-info">
+                                            <span className="demo-name">{sample.name}</span>
+                                            <span className="demo-description">{sample.description}</span>
+                                        </div>
+                                    </div>
                                 </button>
                             ))}
                         </div>
@@ -157,7 +186,7 @@ export default function UploadSection({ onUploadComplete }) {
                     </div>
                 )}
 
-                {!selectedFile ? (
+                {!selectedFile && !isUploading ? (
                     <div
                         className={`drop-zone ${isDragging ? 'dragging' : ''}`}
                         onDrop={handleDrop}
